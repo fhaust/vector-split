@@ -9,8 +9,6 @@ import qualified Data.Vector.Generic as V
 
 import qualified Data.Vector as BV
 
-import qualified Data.List as L
-
 
 
 -- | A delimiter is a list of predicates on elements, matched by some
@@ -52,6 +50,40 @@ toSplitList d v = go 0
                | otherwise      = [Text v]
 
 
+dropDelims :: Vector v a => SplitList v a -> SplitList v a
+dropDelims = filter go 
+    where go (Delim _) = False
+          go (Text _ ) = True
+
+keepDelimsL :: Vector v a => SplitList v a -> SplitList v a
+keepDelimsL (Delim d : Text t : rst) = Text (d V.++ t) : keepDelimsL rst
+keepDelimsL (rs : rst)               = rs : keepDelimsL rst
+keepDelimsL []                       = []
+
+keepDelimsR :: Vector v a => SplitList v a -> SplitList v a
+keepDelimsR (Text t : Delim d : rst) = Text (t V.++ d) : keepDelimsR rst
+keepDelimsR (rs : rst)               = rs : keepDelimsR rst
+keepDelimsR []                       = []
+
+condense :: Vector v a => SplitList v a -> SplitList v a
+condense (Delim a : Delim b : rst) = condense (Delim (a V.++ b) : rst)
+condense (rs : rst)                = rs : condense rst
+condense []                        = []
+
+dropInitBlank :: Vector v a => SplitList v a -> SplitList v a
+dropInitBlank (Text a : rst) | V.null a = rst
+dropInitBlank rst                       = rst
+
+dropFinalBlank :: Vector v a => SplitList v a -> SplitList v a
+dropFinalBlank (rst : [Text _]) = [rst]
+dropFinalBlank (rs : rst)       = rs : dropFinalBlank rst
+dropFinalBlank []               = []
+
+dropInnerBlanks :: Vector v a => SplitList v a -> SplitList v a
+dropInnerBlanks (Delim a : Text t : Delim b : rst) | V.null t  = Delim a : Delim b : dropInnerBlanks rst
+                                                   | otherwise = Delim a : Text t : dropInnerBlanks (Delim b : rst)
+dropInnerBlanks (rs : rst)                                     = rs : dropInnerBlanks rst
+dropInnerBlanks []                                             = []
 
 {-oneOf :: (Vector v a, Eq a) => BV.Vector a -> v a -> [v a]-}
 {-oneOf ds = L.unfoldr go 0-}
