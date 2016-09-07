@@ -51,8 +51,42 @@ split s v = map go $ s v
           go (Delim d) = d
 
 
+-- Convenience functions
 
+-- | Split on the given sublist. Equivalent to split . dropDelims . onSublist. For example:
+--
+-- >>> splitOn ".." "a..b...c....d.." == ["a","b",".c","","d",""]
+-- In some parsing combinator frameworks this is also known as sepBy.
+--
+-- Note that this is the right inverse of the intercalate function from Data.List, that is,
+--
+-- >>> intercalate x . splitOn x === id
+-- splitOn x . intercalate x is the identity on certain lists, but it is
+-- tricky to state the precise conditions under which this holds. (For
+-- example, it is not enough to say that x does not occur in any elements
+-- of the input list. Working out why is left as an exercise for the
+-- reader.)
+splitOn :: (Vector v a, Eq a) => v a -> v a -> [v a]
+splitOn xs = split (dropDelims . onSublist xs)
 
+-- | Split on any of the given elements. Equivalent to split . dropDelims . oneOf. For example:
+--
+-- >>> splitOneOf ";.," "foo,bar;baz.glurk" == ["foo","bar","baz","glurk"]
+splitOneOf :: (Vector v a, Eq a) => v a -> v a -> [v a]
+splitOneOf xs = split (dropDelims . oneOf xs)
+
+-- | Split on elements satisfying the given predicate. Equivalent to split . dropDelims . whenElt. For example:
+--
+-- >>> splitWhen (<0) [1,3,-4,5,7,-9,0,2] == [[1,3],[5,7],[0,2]]
+splitWhen :: (Vector v a) => (a -> Bool) -> v a -> [v a]
+splitWhen p = split (dropDelims . whenElt p)
+
+-- | Split into chunks terminated by the given subsequence. Equivalent to split . dropFinalBlank . dropDelims . onSublist. For example:
+-- 
+-- >>> endBy ";" "foo;bar;baz;" == ["foo","bar","baz"]
+-- Note also that the lines function from Data.List is equivalent to endBy "\n".
+endBy :: (Vector v a, Eq a) => v a -> v a -> [v a]
+endBy xs = split (dropFinalBlank . dropDelims . onSublist xs)
 -- Basic Strategies
 
 -- | A splitting strategy that splits on any one of the given elements. For example:
@@ -60,6 +94,27 @@ split s v = map go $ s v
 oneOf :: (Vector v a, Eq a) => v a -> Splitter v a
 oneOf xs = toSplitList delim
     where delim = Delimiter (BV.singleton (`V.elem` xs))
+
+
+-- | Split into chunks terminated by one of the given elements. Equivalent to split . dropFinalBlank . dropDelims . oneOf. For example:
+--
+-- >>> endByOneOf ";," "foo;bar,baz;" == ["foo","bar","baz"]
+endByOneOf :: (Vector v a, Eq a) => v a -> v a -> [v a]
+endByOneOf xs = split (dropFinalBlank . dropDelims . oneOf xs)
+
+
+-- | Split into "words", with word boundaries indicated by the given predicate. Satisfies words === wordsBy isSpace; equivalent to split . dropBlanks . dropDelims . whenElt. For example:
+--
+-- >>> wordsBy (=='x') "dogxxxcatxbirdxx" == ["dog","cat","bird"]
+wordsBy :: Vector v a => (a -> Bool) -> v a -> [v a]
+wordsBy p = split (dropBlanks . dropDelims . whenElt p)
+
+
+-- | Split into "lines", with line boundaries indicated by the given predicate. Satisfies lines === linesBy (=='\n'); equivalent to split . dropFinalBlank . dropDelims . whenElt. For example:
+--
+-- >>> linesBy (=='x') "dogxxxcatxbirdxx" == ["dog","","","cat","bird",""]
+linesBy :: Vector v a => (a -> Bool) -> v a -> [v a]
+linesBy p = split (dropFinalBlank . dropDelims . whenElt p)
 
 
 -- | A splitting strategy that splits on the given list, when it is
