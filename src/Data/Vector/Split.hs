@@ -1,7 +1,14 @@
 
 
 
-module Data.Vector.Split where
+module Data.Vector.Split
+  ( chunksOf
+  , splitPlaces
+  , splitPlacesBlanks
+  , chop
+  , divvy
+  , module Data.Vector.Split.Internal
+  ) where
 
 
 import           Data.Vector.Generic (Vector)

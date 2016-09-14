@@ -9,7 +9,7 @@ import qualified Data.Vector.Generic as V
 
 import qualified Data.Vector as BV
 
-
+import qualified Data.List as L
 
 -- | A delimiter is a list of predicates on elements, matched by some
 --   contiguous subsequence of a list.
@@ -225,3 +225,14 @@ endsWith xs = dropFinalBlank . keepDelimsR . onSublist xs
 -- >>> split (condense $ endsWithOneOf ".,?! ") "Hi, there!  How are you?" == ["Hi, ","there!  ","How ","are ","you?"]
 endsWithOneOf :: (Vector v a, Eq a) => v a -> Splitter v a
 endsWithOneOf xs = dropFinalBlank . keepDelimsR . oneOf xs
+
+
+
+
+
+-- Util
+
+intercalateV :: Vector v a => v a -> [v a] -> v a
+intercalateV d = go
+    where go [x]    = x
+          go (x:xs) = x V.++ d V.++ go xs
