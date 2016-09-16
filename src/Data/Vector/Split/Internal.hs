@@ -168,7 +168,7 @@ dropInitBlank (Text t : rst) | V.null t = rst
 dropInitBlank rst                       = rst
 
 dropFinalBlank :: Vector v a => SplitList v a -> SplitList v a
-dropFinalBlank (rst : [Text t]) | V.null t = [rst]
+dropFinalBlank [Text t]         | V.null t = []
 dropFinalBlank (rs : rst)       = rs : dropFinalBlank rst
 dropFinalBlank []               = []
 
