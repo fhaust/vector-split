@@ -26,20 +26,7 @@ main = defaultMain tests
 
 
 tests = testGroup "tests" 
-  [ QC.testProperty "chunksOf" prop_chunksOf
-  , QC.testProperty "splitPlaces" prop_splitPlaces
-  , QC.testProperty "splitPlacesBlanks" prop_splitPlacesBlanks
-  , QC.testProperty "chop" prop_chop
-  , QC.testProperty "chopGroup" prop_chopGroup
-  , QC.testProperty "divvy" prop_divvy
-  , QC.testProperty "splitOn" prop_splitOn
-  , QC.testProperty "splitOneOf" prop_splitOneOf
-  , QC.testProperty "splitWhen" prop_splitWhen
-  , QC.testProperty "endBy" prop_endBy
-  , QC.testProperty "endByOneOf" prop_endByOneOf
-  , QC.testProperty "wordsBy" prop_wordsBy
-  , QC.testProperty "linesBy" prop_linesBy
-  , testGroup "basic strategies"
+  [ testGroup "basic strategies"
     [ QC.testProperty "oneOf" prop_oneOf
     , QC.testProperty "onSublist" prop_onSublist
     , QC.testProperty "whenElt" prop_whenElt
@@ -52,6 +39,23 @@ tests = testGroup "tests"
     , QC.testProperty "dropInitBlank" prop_dropInitBlank
     , QC.testProperty "dropFinalBlank" prop_dropFinalBlank
     , QC.testProperty "dropInnerBlank" prop_dropInnerBlank
+    ]
+  , testGroup "other splitting methods"
+    [ QC.testProperty "chunksOf" prop_chunksOf
+    , QC.testProperty "splitPlaces" prop_splitPlaces
+    , QC.testProperty "splitPlacesBlanks" prop_splitPlacesBlanks
+    , QC.testProperty "chop" prop_chop
+    , QC.testProperty "chopGroup" prop_chopGroup
+    , QC.testProperty "divvy" prop_divvy
+    ]
+  , testGroup "convenience functions"
+    [ QC.testProperty "splitOn" prop_splitOn
+    , QC.testProperty "splitOneOf" prop_splitOneOf
+    , QC.testProperty "splitWhen" prop_splitWhen
+    , QC.testProperty "endBy" prop_endBy
+    , QC.testProperty "endByOneOf" prop_endByOneOf
+    , QC.testProperty "wordsBy" prop_wordsBy
+    , QC.testProperty "linesBy" prop_linesBy
     ]
   ]
 
