@@ -19,8 +19,9 @@ newtype Delimiter a = Delimiter (BV.Vector (a -> Bool))
 --   or decomposing the list into the portion which matched the delimiter
 --   and the remainder.
 matchDelim :: Vector v a => Delimiter a -> v a -> Maybe (v a, v a)
-matchDelim (Delimiter ds) xs = if match then Just (V.splitAt (V.length ds) xs) else Nothing
+matchDelim (Delimiter ds) xs = if match && lengthOk then Just (V.splitAt (V.length ds) xs) else Nothing
     where match = V.and $ V.zipWith ($) ds (V.convert xs)
+          lengthOk = V.length ds <= V.length xs
 
 isDelim :: Vector v a => Delimiter a -> v a -> Bool
 isDelim (Delimiter ds) xs = V.and $ V.zipWith ($) ds (V.convert xs)
@@ -173,10 +174,14 @@ dropFinalBlank (rs : rst)       = rs : dropFinalBlank rst
 dropFinalBlank []               = []
 
 dropInnerBlanks :: Vector v a => SplitList v a -> SplitList v a
-dropInnerBlanks (Delim a : Text t : Delim b : rst) | V.null t  = Delim a : dropInnerBlanks (Delim b : rst)
-                                                   | otherwise = Delim a : Text t : dropInnerBlanks (Delim b : rst)
-dropInnerBlanks (rs : rst)                                     = rs : dropInnerBlanks rst
-dropInnerBlanks []                                             = []
+dropInnerBlanks (Text a : rst) = Text a : dropInnerBlanksGo rst
+dropInnerBlanks rst            = dropInnerBlanksGo rst
+
+dropInnerBlanksGo :: Vector v a => [Chunk v a] -> [Chunk v a]
+dropInnerBlanksGo [Text a]                  = [Text a]
+dropInnerBlanksGo (Text a : rst) | V.null a = dropInnerBlanksGo rst
+dropInnerBlanksGo (chunk  : rst)            = chunk : dropInnerBlanksGo rst
+dropInnerBlanksGo []                        = []
 
 
 -- Derived combinators
