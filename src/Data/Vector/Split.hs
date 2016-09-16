@@ -120,5 +120,5 @@ chop f v | V.null v  = []
 divvy :: Vector v a => Int -> Int -> v a -> [v a]
 divvy n m v | V.null v = []
             | otherwise = filter (\ws -> n == V.length ws)
-                        . chop (\xs -> (V.unsafeTake n xs, V.unsafeDrop m xs))
+                        . chop (\xs -> (V.take n xs, V.drop m xs))
                         $ v
