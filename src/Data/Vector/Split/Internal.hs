@@ -203,7 +203,9 @@ dropInnerBlanksGo []                        = []
 -- >>> split (oneOf ":") "::b:::a" == ["",":","",":","b",":","",":","",":","a"]
 -- >>> split (dropBlanks $ oneOf ":") "::b:::a" == ["::","b",":::","a"]
 dropBlanks :: Vector v a => SplitList v a -> SplitList v a
-dropBlanks = condense . dropInitBlank . dropFinalBlank . dropInnerBlanks
+dropBlanks = condense . filter go
+    where go (Text t) | V.null t = False
+          go _                   = True
 
 -- Make a strategy that splits a list into chunks that all start with the
 -- given subsequence (except possibly the first). Equivalent to
