@@ -23,13 +23,20 @@ matchDelim (Delimiter ds) xs = if match && lengthOk then Just (V.splitAt (V.leng
     where match = V.and $ V.zipWith ($) ds (V.convert xs)
           lengthOk = V.length ds <= V.length xs
 
-isDelim :: Vector v a => Delimiter a -> v a -> Bool
-isDelim (Delimiter ds) xs = V.and $ V.zipWith ($) ds (V.convert xs)
 
 
 
 data Chunk v a = Delim (v a) | Text (v a)
     deriving (Show, Eq)
+
+
+fromChunk :: Chunk v a -> v a
+fromChunk (Delim d) = d
+fromChunk (Text  t) = t
+
+isDelim :: Chunk v a -> Bool
+isDelim (Delim _) = True
+isDelim (Text  _) = False
 
 type SplitList v a = [Chunk v a]
 
@@ -159,9 +166,12 @@ keepDelimsR (Text t : Delim d : rst) = Text (t V.++ d) : keepDelimsR rst
 keepDelimsR (rs : rst)               = rs : keepDelimsR rst
 keepDelimsR []                       = []
 
+-- FIXME really not sure about the delim : text : delim case ... 
+-- this was inserted to be compatible with the split package
 condense :: Vector v a => SplitList v a -> SplitList v a
 condense (Delim a : Delim b : rst) = condense (Delim (a V.++ b) : rst)
-condense (rs : rst)                = rs : condense rst
+condense (Delim a : Text t : Delim b : rst) | V.null t = condense (Delim (a V.++ b) : rst)
+condense (t : rst) = t : condense rst
 condense []                        = []
 
 dropInitBlank :: Vector v a => SplitList v a -> SplitList v a
