@@ -1,7 +1,32 @@
 
 
 
-module Data.Vector.Split.Internal where
+module Data.Vector.Split.Internal 
+  ( split
+  , Splitter(..)
+  , splitOn
+  , splitOneOf
+  , splitWhen
+  , endBy
+  , oneOf
+  , endByOneOf
+  , wordsBy
+  , linesBy
+  , onSublist
+  , whenElt
+  , dropDelims
+  , keepDelimsL
+  , keepDelimsR
+  , condense
+  , dropInitBlank
+  , dropInnerBlanks
+  , dropFinalBlank
+  , dropBlanks
+  , startsWith
+  , startsWithOneOf
+  , endsWith
+  , endsWithOneOf
+  ) where
 
 
 import           Data.Vector.Generic (Vector)
