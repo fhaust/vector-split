@@ -18,6 +18,8 @@ import           Data.Char
 
 import           Debug.Trace
 
+import           Elt
+
 main :: IO ()
 main = defaultMain tests
 
@@ -40,62 +42,68 @@ tests = testGroup "tests"
   , testGroup "basic strategies"
     [ QC.testProperty "oneOf" prop_oneOf
     , QC.testProperty "onSublist" prop_onSublist
+    , QC.testProperty "whenElt" prop_whenElt
     ]
   ]
 
 -- Basic Strategies
 
-prop_oneOf :: String -> String -> Bool
+prop_oneOf :: Elements -> Elements -> Property
 prop_oneOf d = listVsVec (L.split (L.oneOf d)) (V.split (V.oneOf (V.fromList d)))
 
-prop_onSublist :: String -> String -> Bool
-prop_onSublist d = listVsVec (L.split (L.onSublist d)) (V.split (V.onSublist (V.fromList d)))
+prop_onSublist :: SomeElements -> Elements -> Property
+prop_onSublist (NonEmpty d) = listVsVec (L.split (L.onSublist d)) (V.split (V.onSublist (V.fromList d)))
 
-prop_chunksOf :: QC.Positive Int -> [Double] -> Bool
-prop_chunksOf (QC.Positive i) = listVsVec (L.chunksOf i) (V.chunksOf i)
+prop_whenElt :: Fun Elt Bool -> Elements -> Property
+prop_whenElt (Fn f) = listVsVec (L.split (L.whenElt f)) (V.split (V.whenElt f))
 
-prop_splitPlaces :: [QC.Positive Int] -> [Double] -> Bool
+
+
+prop_chunksOf :: Positive Int -> [Double] -> Property
+prop_chunksOf (Positive i) = listVsVec (L.chunksOf i) (V.chunksOf i)
+
+prop_splitPlaces :: [Positive Int] -> [Double] -> Property
 prop_splitPlaces is = listVsVec (L.splitPlaces is') (V.splitPlaces is')
-    where is' = map QC.getPositive is
+    where is' = map getPositive is
 
-prop_splitPlacesBlanks :: [QC.Positive Int] -> [Double] -> Bool
+prop_splitPlacesBlanks :: [Positive Int] -> [Double] -> Property
 prop_splitPlacesBlanks is = listVsVec (L.splitPlacesBlanks is') (V.splitPlacesBlanks is')
-    where is' = map QC.getPositive is
+    where is' = map getPositive is
 
-prop_chop :: [Double] -> Bool
+prop_chop :: [Double] -> Property
 prop_chop = listVsVec (L.chop (L.splitAt 10)) (V.chop (V.splitAt 10))
 
-prop_chopGroup :: [Double] -> Bool
+prop_chopGroup :: [Double] -> Property
 prop_chopGroup = listVsVec (L.chop (\xs -> L.span (== L.head xs) xs)) (V.chop (\xs -> V.span (== V.head xs) xs))
 
 
-prop_divvy :: Positive Int -> QC.Positive Int -> [Double] -> Bool
-prop_divvy (QC.Positive n) (QC.Positive m) = listVsVec (L.divvy n m) (V.divvy n m)
+prop_divvy :: Positive Int -> Positive Int -> [Double] -> Property
+prop_divvy (Positive n) (Positive m) = listVsVec (L.divvy n m) (V.divvy n m)
 
-prop_splitOn :: NonEmptyList Char -> String -> Bool
-prop_splitOn (QC.NonEmpty ds) = listVsVec (L.splitOn ds) (V.splitOn (V.fromList ds))
+prop_splitOn :: SomeElements -> Elements -> Property
+prop_splitOn (NonEmpty ds) = listVsVec (L.splitOn ds) (V.splitOn (V.fromList ds))
 
-prop_splitOneOf :: NonEmptyList Char -> String -> Bool
-prop_splitOneOf (QC.NonEmpty ds) = listVsVec (L.splitOneOf ds) (V.splitOneOf (V.fromList ds))
+prop_splitOneOf :: SomeElements -> Elements -> Property
+prop_splitOneOf (NonEmpty ds) = listVsVec (L.splitOneOf ds) (V.splitOneOf (V.fromList ds))
 
-prop_splitWhen :: Fun Char Bool -> String -> Bool
+prop_splitWhen :: Fun Elt Bool -> Elements -> Property
 prop_splitWhen (Fn f) = listVsVec (L.splitWhen f) (V.splitWhen f)
 
-prop_endBy :: NonEmptyList Char -> String -> Bool
+prop_endBy :: SomeElements -> Elements -> Property
 prop_endBy (NonEmpty p) = listVsVec (L.endBy p) (V.endBy (V.fromList p))
 
-prop_endByOneOf :: NonEmptyList Char -> String -> Bool
+prop_endByOneOf :: SomeElements -> Elements -> Property
 prop_endByOneOf (NonEmpty p) = listVsVec (L.endByOneOf p) (V.endByOneOf (V.fromList p))
 
-prop_wordsBy :: Fun Char Bool -> String -> Bool
+prop_wordsBy :: Fun Elt Bool -> Elements -> Property
 prop_wordsBy (Fn f) = listVsVec (L.wordsBy f) (V.wordsBy f)
 
-prop_linesBy :: Fun Char Bool -> String -> Bool
-prop_linesBy (Fn f) = listVsVec (L.linesBy f) (V.wordsBy f)
+prop_linesBy :: Fun Elt Bool -> Elements -> Property
+prop_linesBy (Fn f) = listVsVec (L.linesBy f) (V.linesBy f)
 
 -- | compare a list splitting vs a vector splitting function
-listVsVec :: Eq a => ([a] -> [[a]]) -> (V.Vector a -> [V.Vector a]) -> [a] -> Bool
-listVsVec a b l = ls == map V.toList vs
+listVsVec :: (Show a, Eq a) => ([a] -> [[a]]) -> (V.Vector a -> [V.Vector a]) -> [a] -> Property
+listVsVec a b l = ls === map V.toList vs
     where v = V.fromList l
           ls = a l
           vs = b v
