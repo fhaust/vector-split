@@ -18,8 +18,6 @@ import           Data.Char
 
 import           Debug.Trace
 
-import           Elt
-
 main :: IO ()
 main = defaultMain tests
 
@@ -59,6 +57,26 @@ tests = testGroup "tests"
     ]
   ]
 
+-- small set of elements used for testing
+
+newtype Elt = Elt { unElt :: Char } deriving (Eq)
+
+type Elements = [Elt]
+type SomeElements = NonEmptyList Elt
+
+instance Show Elt where
+    show (Elt c) = show c
+
+instance Arbitrary Elt where
+    arbitrary = elements (map Elt "abcde")
+
+instance CoArbitrary Elt where
+  coarbitrary = coarbitrary . ord . unElt
+
+
+instance Function Elt where
+  function = functionMap unElt Elt
+
 -- Basic Strategies
 
 prop_oneOf :: Elements -> Elements -> Property
@@ -68,7 +86,7 @@ prop_onSublist :: SomeElements -> Elements -> Property
 prop_onSublist (NonEmpty d) = listVsVec (L.split (L.onSublist d)) (V.split (V.onSublist (V.fromList d)))
 
 prop_whenElt :: Fun Elt Bool -> Elements -> Property
-prop_whenElt (Fn f) = listVsVec (L.split (L.whenElt f)) (V.split (V.whenElt f))
+prop_whenElt (Fun _ f) = listVsVec (L.split (L.whenElt f)) (V.split (V.whenElt f))
 
 
 
@@ -136,7 +154,7 @@ prop_splitOn :: SomeElements -> Elements -> Property
 prop_splitOn (NonEmpty ds) = listVsVec (L.splitOn ds) (V.splitOn (V.fromList ds))
 
 prop_splitWhen :: Fun Elt Bool -> Elements -> Property
-prop_splitWhen (Fn f) = listVsVec (L.splitWhen f) (V.splitWhen f)
+prop_splitWhen (Fun _ f) = listVsVec (L.splitWhen f) (V.splitWhen f)
 
 prop_endBy :: SomeElements -> Elements -> Property
 prop_endBy (NonEmpty p) = listVsVec (L.endBy p) (V.endBy (V.fromList p))
@@ -145,10 +163,10 @@ prop_endByOneOf :: SomeElements -> Elements -> Property
 prop_endByOneOf (NonEmpty p) = listVsVec (L.endByOneOf p) (V.endByOneOf (V.fromList p))
 
 prop_wordsBy :: Fun Elt Bool -> Elements -> Property
-prop_wordsBy (Fn f) = listVsVec (L.wordsBy f) (V.wordsBy f)
+prop_wordsBy (Fun _ f) = listVsVec (L.wordsBy f) (V.wordsBy f)
 
 prop_linesBy :: Fun Elt Bool -> Elements -> Property
-prop_linesBy (Fn f) = listVsVec (L.linesBy f) (V.linesBy f)
+prop_linesBy (Fun _ f) = listVsVec (L.linesBy f) (V.linesBy f)
 
 
 
