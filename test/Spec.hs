@@ -1,5 +1,6 @@
 
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE CPP #-}
 
 import           Test.Tasty
 import qualified Test.Tasty.QuickCheck as QC
@@ -44,7 +45,9 @@ tests = testGroup "tests"
     , QC.testProperty "splitPlacesBlanks" prop_splitPlacesBlanks
     , QC.testProperty "chop" prop_chop
     , QC.testProperty "chopGroup" prop_chopGroup
+#if MIN_VERSION_split(2,3,0)
     , QC.testProperty "divvy" prop_divvy
+#endif
     ]
   , testGroup "convenience functions"
     [ QC.testProperty "splitOn" prop_splitOn
@@ -139,9 +142,10 @@ prop_chop = listVsVec (L.chop (L.splitAt 10)) (V.chop (V.splitAt 10))
 prop_chopGroup :: [Double] -> Property
 prop_chopGroup = listVsVec (L.chop (\xs -> L.span (== L.head xs) xs)) (V.chop (\xs -> V.span (== V.head xs) xs))
 
-
+#if MIN_VERSION_split(2,3,0)
 prop_divvy :: Positive Int -> Positive Int -> [Double] -> Property
 prop_divvy (Positive n) (Positive m) = listVsVec (L.divvy n m) (V.divvy n m)
+#endif
 
 
 
