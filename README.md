@@ -1,6 +1,8 @@
 vector-split
 ============
 
+[![Build Status](https://travis-ci.org/fhaust/vector-split.svg?branch=master)](https://travis-ci.org/fhaust/vector-split)
+
 This package aims to be a vector-based replacement for the list-based `split` package.
 
 Compatibility
