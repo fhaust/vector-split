@@ -183,18 +183,32 @@ whenElt p = toSplitList delim
     where delim = Delimiter (V.singleton p)
 
 
--- Strategy Transformers (how does haddock work?)
+-- Strategy Transformers
 
+-- | Drop delimiters from the output (the default is to keep them). For example,
+--
+-- >>> split (oneOf (BV.fromList ":")) (BV.fromList "a:b:c")
+-- ["a",":","b",":","c"]
+-- >>> split (dropDelims . oneOf (BV.fromList ":")) (BV.fromList "a:b:c")
+-- ["a","b","c"]
 dropDelims :: Vector v a => SplitList v a -> SplitList v a
 dropDelims = filter go 
     where go (Delim _) = False
           go (Text _ ) = True
 
+-- | Keep delimiters in the output by prepending them to adjacent chunks. For example:
+--
+-- >>> split (keepDelimsL . oneOf (BV.fromList "xyz")) (BV.fromList "aazbxyzcxd")
+-- ["aa","zb","x","y","zc","xd"]
 keepDelimsL :: Vector v a => SplitList v a -> SplitList v a
 keepDelimsL (Delim d : Text t : rst) = Text (d V.++ t) : keepDelimsL rst
 keepDelimsL (rs : rst)               = rs : keepDelimsL rst
 keepDelimsL []                       = []
 
+-- | Keep delimiters in the output by appending them to adjacent chunks. For example:
+--
+-- >>> split (keepDelimsR . oneOf (BV.fromList "xyz")) (BV.fromList "aazbxyzcxd")
+-- ["aaz","bx","y","z","cx","d"]
 keepDelimsR :: Vector v a => SplitList v a -> SplitList v a
 keepDelimsR (Text t : Delim d : rst) = Text (t V.++ d) : keepDelimsR rst
 keepDelimsR (rs : rst)               = rs : keepDelimsR rst
@@ -202,21 +216,50 @@ keepDelimsR []                       = []
 
 -- FIXME really not sure about the delim : text : delim case ... 
 -- this was inserted to be compatible with the split package
+
+-- | Condense multiple consecutive delimiters into one. For example:
+--
+-- >>> split (condense . oneOf (BV.fromList "xyz")) (BV.fromList "aazbxyzcxd")
+-- ["aa","z","b","xyz","c","x","d"]
+-- >>> split (dropDelims . oneOf (BV.fromList "xyz")) (BV.fromList "aazbxyzcxd")
+-- ["aa","b","","","c","d"]
+-- >>> split (condense . dropDelims . oneOf (BV.fromList "xyz")) (BV.fromList "aazbxyzcxd")
+-- ["aa","b","c","d"]
+--
+-- FIXME this function is not fully compatible with the Data.List.Split version.
 condense :: Vector v a => SplitList v a -> SplitList v a
 condense (Delim a : Delim b : rst) = condense (Delim (a V.++ b) : rst)
 condense (Delim a : Text t : Delim b : rst) | V.null t = condense (Delim (a V.++ b) : rst)
 condense (t : rst) = t : condense rst
 condense []                        = []
 
+-- | Don't generate a blank chunk if there is a delimiter at the beginning. For example:
+--
+-- >>> split (oneOf (BV.fromList ":")) (BV.fromList ":a:b")
+-- ["",":","a",":","b"]
+-- >>> split (dropInitBlank . oneOf (BV.fromList ":")) (BV.fromList ":a:b")
+-- [":","a",":","b"]
 dropInitBlank :: Vector v a => SplitList v a -> SplitList v a
 dropInitBlank (Text t : rst) | V.null t = rst
 dropInitBlank rst                       = rst
 
+-- | Don't generate a blank chunk if there is a delimiter at the end. For example:
+--
+-- split (oneOf (BV.fromList ":")) (BV.fromList "a:b:")
+-- ["a",":","b",":",""]
+-- split (dropFinalBlank . oneOf (BV.fromList ":")) (BV.fromList "a:b:")
+-- ["a",":","b",":"]
 dropFinalBlank :: Vector v a => SplitList v a -> SplitList v a
 dropFinalBlank [Text t]         | V.null t = []
 dropFinalBlank (rs : rst)       = rs : dropFinalBlank rst
 dropFinalBlank []               = []
 
+-- | Don't generate blank chunks between consecutive delimiters. For example:
+--
+-- >>> split (oneOf (BV.fromList ":")) (BV.fromList "::b:::a")
+-- ["",":","",":","b",":","",":","",":","a"]
+-- >>> split (dropInnerBlanks . oneOf (BV.fromList ":")) (BV.fromList "::b:::a")
+-- ["",":",":","b",":",":",":","a"]
 dropInnerBlanks :: Vector v a => SplitList v a -> SplitList v a
 dropInnerBlanks (Text a : rst) = Text a : dropInnerBlanksGo rst
 dropInnerBlanks rst            = dropInnerBlanksGo rst
@@ -230,50 +273,56 @@ dropInnerBlanksGo []                        = []
 
 -- Derived combinators
 
--- Drop all blank chunks from the output, and condense consecutive
+-- | Drop all blank chunks from the output, and condense consecutive
 -- delimiters into one. 
 -- Equivalent to dropInitBlank . dropFinalBlank . condense. For example:
 --
--- >>> split (oneOf ":") "::b:::a" == ["",":","",":","b",":","",":","",":","a"]
--- >>> split (dropBlanks $ oneOf ":") "::b:::a" == ["::","b",":::","a"]
+-- >>> split (oneOf (BV.fromList ":")) (BV.fromList "::b:::a")
+-- ["",":","",":","b",":","",":","",":","a"]
+-- >>> split (dropBlanks . oneOf (BV.fromList ":")) (BV.fromList "::b:::a")
+-- ["::","b",":::","a"]
 dropBlanks :: Vector v a => SplitList v a -> SplitList v a
 dropBlanks = condense . filter go
     where go (Text t) | V.null t = False
           go _                   = True
 
--- Make a strategy that splits a list into chunks that all start with the
+-- | Make a strategy that splits a list into chunks that all start with the
 -- given subsequence (except possibly the first). Equivalent to
 -- dropInitBlank . keepDelimsL . onSublist. For example:
 --
--- >>> split (startsWith "app") "applyapplicativeapplaudapproachapple" == ["apply","applicative","applaud","approach","apple"]
+-- >>> split (startsWith (BV.fromList "app")) (BV.fromList "applyapplicativeapplaudapproachapple")
+-- ["apply","applicative","applaud","approach","apple"]
 startsWith :: (Vector v a, Eq a) => v a -> Splitter v a
 startsWith xs = dropInitBlank . keepDelimsL . onSublist xs
 
--- Make a strategy that splits a list into chunks that all start with one
+-- | Make a strategy that splits a list into chunks that all start with one
 -- of the given elements (except possibly the first). Equivalent to
 -- dropInitBlank . keepDelimsL . oneOf. For example:
 --
--- >>> split (startsWithOneOf ['A'..'Z']) "ACamelCaseIdentifier" == ["A","Camel","Case","Identifier"]
+-- >>> split (startsWithOneOf (BV.fromList ['A'..'Z'])) (BV.fromList "ACamelCaseIdentifier")
+-- ["A","Camel","Case","Identifier"]
 startsWithOneOf :: (Vector v a, Eq a) => v a -> Splitter v a
 startsWithOneOf xs = dropInitBlank . keepDelimsL . oneOf xs
 
--- Make a strategy that splits a list into chunks that all end with the
+-- | Make a strategy that splits a list into chunks that all end with the
 -- given subsequence, except possibly the last. Equivalent to
 -- dropFinalBlank . keepDelimsR . onSublist. For example:
 --
--- >>> split (endsWith "ly") "happilyslowlygnarlylily" == ["happily","slowly","gnarly","lily"]
+-- >>> split (endsWith (BV.fromList "ly")) (BV.fromList "happilyslowlygnarlylily")
+-- ["happily","slowly","gnarly","lily"]
 endsWith :: (Vector v a, Eq a) => v a -> Splitter v a
 endsWith xs = dropFinalBlank . keepDelimsR . onSublist xs
 
 
 
 -- Note: this function is not consistent with the Data.List.Split version
---
--- Make a strategy that splits a list into chunks that all end with one of
+
+-- | Make a strategy that splits a list into chunks that all end with one of
 -- the given elements, except possibly the last. Equivalent to
 -- dropFinalBlank . keepDelimsR . oneOf. For example:
 --
--- >>> split (condense $ endsWithOneOf ".,?! ") "Hi, there!  How are you?" == ["Hi, ","there!  ","How ","are ","you?"]
+-- >>> split (condense . endsWithOneOf (BV.fromList ".,?! ")) (BV.fromList "Hi, there!  How are you?")
+-- ["Hi, ","there!  ","How ","are ","you?"]
 endsWithOneOf :: (Vector v a, Eq a) => v a -> Splitter v a
 endsWithOneOf xs = dropFinalBlank . keepDelimsR . oneOf xs
 
