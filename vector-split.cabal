@@ -1,14 +1,18 @@
 name:                vector-split
-version:             1.0.0.0
-synopsis:            Initial project template from stack
-description:         Please see README.md
-homepage:            https://github.com/fhaust/vector-split#readme
-license:             BSD3
+version:             1.0.0.1
+synopsis:            Combinator library for splitting vectors.
+description:         This package aims to be a vector-based drop-in replacement
+                     for the list-based split package.
+                     For more information see the haddocs or checkout the source
+                     on github.
+homepage:            https://github.com/fhaust/vector-split
+bug-reports:         https://github.com/fhaust/vector-split/issues
+license:             MIT
 license-file:        LICENSE
 author:              Florian Hofmann
 maintainer:          fho@f12n.de
-copyright:           MIT
-category:            Web
+copyright:           (c) Florian Hofmann 2016
+category:            Data, Data Structures
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
