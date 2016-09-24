@@ -51,8 +51,8 @@ chunksOf i = unfoldr go
 splitPlaces :: Vector v a => [Int] -> v a -> [v a]
 splitPlaces is v = unfoldr go (is,v)
   where go ([],_)   = Nothing
-        go (i:is,v) | V.null v = Nothing
-                    | otherwise = let (l,r) = V.splitAt i v in Just (l,(is,r))
+        go (x:xs,y) | V.null y = Nothing
+                    | otherwise = let (l,r) = V.splitAt x y in Just (l,(xs,r))
 
 
 -- | Split a vector into chunks of the given lengths. Unlike
@@ -72,7 +72,7 @@ splitPlaces is v = unfoldr go (is,v)
 splitPlacesBlanks :: Vector v a => [Int] -> v a -> [v a]
 splitPlacesBlanks is v = unfoldr go (is,v)
   where go ([],_)   = Nothing
-        go (i:is,v) = let (l,r) = V.splitAt i v in Just (l,(is,r))
+        go (x:xs,y) = let (l,r) = V.splitAt x y in Just (l,(xs,r))
 
 
 

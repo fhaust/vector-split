@@ -3,7 +3,7 @@
 
 module Data.Vector.Split.Internal 
   ( split
-  , Splitter(..)
+  , Splitter
   , splitOn
   , splitOneOf
   , splitWhen
@@ -34,8 +34,6 @@ import qualified Data.Vector.Generic as V
 
 import qualified Data.Vector as BV
 
-import qualified Data.List as L
-
 -- | A delimiter is a list of predicates on elements, matched by some
 --   contiguous subsequence of a list.
 newtype Delimiter a = Delimiter (BV.Vector (a -> Bool))
@@ -54,14 +52,6 @@ matchDelim (Delimiter ds) xs = if match && lengthOk then Just (V.splitAt (V.leng
 data Chunk v a = Delim (v a) | Text (v a)
     deriving (Show, Eq)
 
-
-fromChunk :: Chunk v a -> v a
-fromChunk (Delim d) = d
-fromChunk (Text  t) = t
-
-isDelim :: Chunk v a -> Bool
-isDelim (Delim _) = True
-isDelim (Text  _) = False
 
 type SplitList v a = [Chunk v a]
 
@@ -326,13 +316,3 @@ endsWith xs = dropFinalBlank . keepDelimsR . onSublist xs
 endsWithOneOf :: (Vector v a, Eq a) => v a -> Splitter v a
 endsWithOneOf xs = dropFinalBlank . keepDelimsR . oneOf xs
 
-
-
-
-
--- Util
-
-intercalateV :: Vector v a => v a -> [v a] -> v a
-intercalateV d = go
-    where go [x]    = x
-          go (x:xs) = x V.++ d V.++ go xs
