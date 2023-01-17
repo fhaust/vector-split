@@ -1,5 +1,5 @@
 name:                vector-split
-version:             1.0.0.2
+version:             1.0.0.3
 synopsis:            Combinator library for splitting vectors.
 description:         This package aims to be a vector-based drop-in replacement
                      for the list-based split package.
@@ -22,7 +22,7 @@ library
   exposed-modules:     Data.Vector.Split
                      , Data.Vector.Split.Internal
   build-depends:       base     >= 4    && < 5
-                     , vector   >= 0.10 && < 0.13
+                     , vector   >= 0.10 && < 0.14
   default-language:    Haskell2010
   ghc-options:         -Wall
 
