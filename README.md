@@ -4,7 +4,7 @@ vector-split
 [![vector-split on Hackage](https://img.shields.io/hackage/v/vector-split.svg)](https://hackage.haskell.org/package/vector-split)
 [![vector-split on latest Stackage LTS](http://stackage.org/package/vector-split/badge/lts)](http://stackage.org/lts/package/vector-split)
 [![vector-split on Stackage Nightly](http://stackage.org/package/vector-split/badge/nightly)](http://stackage.org/nightly/package/vector-split)
-[![vector-split on Travis-CI](https://travis-ci.org/fhaust/vector-split.svg?branch=master)](https://travis-ci.org/fhaust/vector-split)
+[![vector-split on Haskell-CI](https://github.com/fhaust/vector-split/actions/workflows/haskell-ci.yml/badge.svg)](https://github.com/fhaust/vector-split/actions/workflows/haskell-ci.yml)
 
 This package aims to be a vector-based replacement for the list-based `split` package.
 
