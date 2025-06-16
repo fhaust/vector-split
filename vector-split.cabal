@@ -1,5 +1,5 @@
 name:                vector-split
-version:             1.0.0.3
+version:             1.0.0.4
 synopsis:            Combinator library for splitting vectors.
 description:         This package aims to be a vector-based drop-in replacement
                      for the list-based split package.
